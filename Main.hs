@@ -4,70 +4,52 @@ import Carta
 import Jogador
 import System.Random (randomRIO)
 
-saldoAtual :: [Int] -> Int
+saldoAtual :: [Float] -> Float
 saldoAtual = sum
 
 somarMao :: Mao -> Int
 somarMao [Carta valor1 _, Carta valor2 _]
-  | (valor1 == A && valorNumerico valor2 == 10)
-      || (valor2 == A && valorNumerico valor1 == 10) =
-      21
+  | (valor1 == A && valorNumerico valor2 == 10) ||
+    (valor2 == A && valorNumerico valor1 == 10) = 21
   | otherwise = valorNumerico valor1 + valorNumerico valor2
 somarMao mao = sum (map valorNumerico mao)
 
-data Resultado = Vitoria | Empate | Derrota deriving (Eq)
+data Resultado = Blackjack | Vitoria | Empate | Derrota deriving (Eq)
 
-data Situacao = VinteUm | Estouro | Incompleto deriving (Eq)
+data Situacao = Blackjack | VinteUm | Estouro | Incompleto deriving (Eq)
 
 verificarSituacao :: Mao -> Situacao
 verificarSituacao mao =
   let total = somarMao mao
-   in if total > 21
-        then Estouro
-        else
-          if total == 21
-            then VinteUm
-            else Incompleto
+   in if total > 21 then Estouro
+      else if total == 21 && length mao == 2 then Blackjack
+      else if total == 21 then VinteUm
+      else Incompleto
 
 verificarVitoria :: Mao -> Mao -> Resultado
 verificarVitoria jogadorMao dealerMao =
   let totalJogador = somarMao jogadorMao
       totalDealer = somarMao dealerMao
-   in if totalJogador > totalDealer
-        then Vitoria
-        else
-          if totalJogador == totalDealer
-            then Empate
-            else Derrota
+   in if totalJogador > totalDealer then Vitoria
+      else if totalJogador == totalDealer then Empate
+      else Derrota
 
 verificarResultado :: Jogador -> Jogador -> Resultado
 verificarResultado jogador dealer =
   let situacaoJogador = verificarSituacao (mao jogador)
       situacaoDealer = verificarSituacao (mao dealer)
-   in if situacaoJogador == Incompleto && situacaoDealer == Incompleto
-        then
-          verificarVitoria (mao jogador) (mao dealer)
-        else
-          if situacaoJogador == situacaoDealer
-            then Empate
-            else
-              if situacaoJogador == VinteUm || situacaoDealer == Estouro
-                then Vitoria
-                -- situacaoDealer == VinteUm || situacaoJogador == Estouro
-                else Derrota
+   in if situacaoJogador == Incompleto && situacaoDealer == Incompleto then verificarVitoria (mao jogador) (mao dealer)
+      else if situacaoJogador == situacaoDealer then Empate
+      else if situacaoDealer == Blackjack then Derrota
+      else if situacaoJogador == Blackjack || situacaoJogador == VinteUm || situacaoDealer == Estouro then Vitoria
+      -- situacaoDealer == VinteUm || situacaoJogador == Estouro
+      else Derrota
 
-addHistorico :: Jogador -> Int -> Jogador
-addHistorico (Jogador nome mao historico) valor =
-  Jogador nome mao (historico ++ [valor])
-
-limparBaralho :: Jogador -> Jogador
-limparBaralho (Jogador nome mao historico) =
-  Jogador nome [] historico
+limparMao :: Jogador -> Jogador
+limparMao jogador = jogador {mao = []}
 
 criarBaralho :: Mao
 criarBaralho = [Carta valor naipe | valor <- todosValores, naipe <- todosNaipes]
-
--- TODO: Estado de blackjack
 
 -- Ao comprar a carta o jogador pega a carta
 pegarCarta :: Jogador -> Carta -> Jogador
@@ -100,17 +82,43 @@ jogadaDealer dealer baralho
 -- TODO: Interface (menu e scanf)
 -- TODO: E apostar
 
-atualizarSaldo :: Jogador -> Resultado -> Int -> Jogador
+addHistorico :: Jogador -> Float -> Jogador
+addHistorico jogador valor = jogador {historico = historico jogador ++ [valor]}
+
+apostar :: Jogador -> Float -> Jogador
+apostar jogador valor 
+  | valor > 0 = addHistorico jogador -valor
+  | valor < 0 = addHistorico jogador valor
+
+atualizarSaldo :: Jogador -> Resultado -> Float -> Jogador
 atualizarSaldo jogador resultado aposta =
   case resultado of
+    Blackjack -> addHistorico jogador (2.5 * aposta)
     Vitoria -> addHistorico jogador (2 * aposta)
     Empate -> addHistorico jogador aposta
-    Derrota -> jogador
+    Derrota -> addHistorico jogador 0
+
+obterNome :: IO String
+obterNome = do
+  print "Digite seu nome:"
+  nome <- getLine
+  if null (trim nome) then do
+    print "Nome inválido! Tente novamente"
+    obterNome
+  else return nome
+
+criarJogador :: String -> Jogador
+criarJogador nome = Jogador nome [] []
+    
 
 main :: IO ()
 main = do
-  let player = Jogador "Cristina" [] []
-  let dealer = Jogador "Dealer" [] []
+
+  -- let nome = obterNome
+  let nome = "Cristina"
+
+  let player = criarJogador nome
+  let dealer = criarJogador "dealer"
 
   print player
   print dealer
