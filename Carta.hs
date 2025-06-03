@@ -5,7 +5,7 @@ module Carta
     Mao,
     Valoravel (..),
     todosValores,
-    todosNaipes
+    todosNaipes,
   )
 where
 
@@ -14,7 +14,7 @@ data Naipe = Copas | Espadas | Ouros | Paus
 todosNaipes :: [Naipe]
 todosNaipes = [Copas, Espadas, Ouros, Paus]
 
-data Valor = A | Dois | Tres | Quatro | Cinco | Seis | Sete | Oito | Nove | Dez | J | Q | K
+data Valor = A | Dois | Tres | Quatro | Cinco | Seis | Sete | Oito | Nove | Dez | J | Q | K deriving (Eq)
 
 todosValores :: [Valor]
 todosValores = [A, Dois, Tres, Quatro, Cinco, Seis, Sete, Oito, Nove, Dez, J, Q, K]

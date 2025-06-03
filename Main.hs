@@ -2,14 +2,17 @@ module Main where
 
 import Carta
 import Jogador
-
-pegarCarta :: Jogador -> Carta -> Jogador
-pegarCarta jogador carta = jogador {mao = mao jogador ++ [carta]}
+import System.Random (randomRIO)
 
 saldoAtual :: [Int] -> Int
 saldoAtual = sum
 
 somarMao :: Mao -> Int
+somarMao [Carta valor1 _, Carta valor2 _]
+  | (valor1 == A && valorNumerico valor2 == 10)
+      || (valor2 == A && valorNumerico valor1 == 10) =
+      21
+  | otherwise = valorNumerico valor1 + valorNumerico valor2
 somarMao mao = sum (map valorNumerico mao)
 
 data Resultado = Vitoria | Empate | Derrota deriving (Eq)
@@ -63,6 +66,46 @@ limparBaralho (Jogador nome mao historico) =
 
 criarBaralho :: Mao
 criarBaralho = [Carta valor naipe | valor <- todosValores, naipe <- todosNaipes]
+
+-- TODO: Estado de blackjack
+
+-- Ao comprar a carta o jogador pega a carta
+pegarCarta :: Jogador -> Carta -> Jogador
+pegarCarta jogador carta = jogador {mao = mao jogador ++ [carta]}
+
+comprarCarta :: Mao -> IO (Carta, Mao)
+comprarCarta baralho = do
+  let len = length baralho
+  if len == 0
+    then error "Baralho vazio!"
+    else do
+      randomNu <- randomRIO (0, len - 1)
+      let carta = baralho !! randomNu
+          novoBaralho = take randomNu baralho ++ drop (randomNu + 1) baralho
+      return (carta, novoBaralho)
+
+comprarCartaParaJogador :: Jogador -> Mao -> IO (Jogador, Mao)
+comprarCartaParaJogador jogador baralho = do
+  (carta, novoBaralho) <- comprarCarta baralho
+  let novoJogador = pegarCarta jogador carta
+  return (novoJogador, novoBaralho)
+
+jogadaDealer :: Jogador -> Mao -> IO (Jogador, Mao)
+jogadaDealer dealer baralho
+  | somarMao (mao dealer) >= 17 = return (dealer, baralho)
+  | otherwise = do
+      (novoDealer, novoBaralho) <- comprarCartaParaJogador dealer baralho
+      jogadaDealer novoDealer novoBaralho
+
+-- TODO: Interface (menu e scanf)
+-- TODO: E apostar
+
+atualizarSaldo :: Jogador -> Resultado -> Int -> Jogador
+atualizarSaldo jogador resultado aposta =
+  case resultado of
+    Vitoria -> addHistorico jogador (2 * aposta)
+    Empate -> addHistorico jogador aposta
+    Derrota -> jogador
 
 main :: IO ()
 main = do
