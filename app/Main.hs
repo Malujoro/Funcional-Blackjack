@@ -163,16 +163,17 @@ menu jogador = do
 
 exibirGanhosPerdas :: [Float] -> Int -> IO ()
 exibirGanhosPerdas [] _ = return ()
-exibirGanhosPerdas (valor : tail) i = do
+exibirGanhosPerdas (valor : t) i = do
   let prefixo = if even i then "Aposta" else "Resultado"
       sufixo = if even i then " | " else "\n"
   printf "%s: R$%.2f%s" prefixo valor sufixo
+  exibirGanhosPerdas t (i+1)
 
 exibirHistorico :: [Float] -> IO ()
 exibirHistorico [] = return ()
-exibirHistorico (head : tail) = do
-  printf "Saldo inicial: R$%.2f\n" head
-  exibirGanhosPerdas tail 0
+exibirHistorico (h : t) = do
+  printf "Saldo inicial: R$%.2f\n" h
+  exibirGanhosPerdas t 0
 
 
 -- iniciarJogo :: 
@@ -180,7 +181,7 @@ exibirHistorico (head : tail) = do
 
 main :: IO ()
 main = do
-  limparTela
+  -- limparTela
 
   -- name <- lerString "Digite seu nome: "
   let name = "Cristina"
