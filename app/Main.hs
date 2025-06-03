@@ -14,7 +14,7 @@ somarMao [Carta valor1 _, Carta valor2 _]
   | otherwise = valorNumerico valor1 + valorNumerico valor2
 somarMao mao = sum (map valorNumerico mao)
 
-data Resultado = Blackjack | Vitoria | Empate | Derrota deriving (Eq)
+data Resultado = VitoriaBlackjack | Vitoria | Empate | Derrota deriving (Eq)
 
 data Situacao = Blackjack | VinteUm | Estouro | Incompleto deriving (Eq)
 
@@ -40,10 +40,10 @@ verificarResultado jogador dealer =
       situacaoDealer = verificarSituacao (mao dealer)
    in if situacaoJogador == Incompleto && situacaoDealer == Incompleto then verificarVitoria (mao jogador) (mao dealer)
       else if situacaoJogador == situacaoDealer then Empate
-      else if situacaoDealer == Blackjack then Derrota
-      else if situacaoJogador == Blackjack || situacaoJogador == VinteUm || situacaoDealer == Estouro then Vitoria
-      -- situacaoDealer == VinteUm || situacaoJogador == Estouro
-      else Derrota
+      else if situacaoJogador == Blackjack then VitoriaBlackjack
+      else if situacaoDealer == Blackjack || situacaoDealer == VinteUm || situacaoJogador == Estouro then Derrota
+      -- else if situacaoJogador == VinteUm || situacaoDealer == Estouro then 
+      else Vitoria
 
 limparMao :: Jogador -> Jogador
 limparMao jogador = jogador {mao = []}
@@ -93,7 +93,7 @@ apostar jogador valor
 atualizarSaldo :: Jogador -> Resultado -> Float -> Jogador
 atualizarSaldo jogador resultado aposta =
   case resultado of
-    Blackjack -> addHistorico jogador (2.5 * aposta)
+    VitoriaBlackjack -> addHistorico jogador (2.5 * aposta)
     Vitoria -> addHistorico jogador (2 * aposta)
     Empate -> addHistorico jogador aposta
     Derrota -> addHistorico jogador 0
