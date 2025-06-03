@@ -4,6 +4,13 @@ import Carta
 import Jogador
 import System.Random (randomRIO)
 import Data.Char (isSpace)
+import Text.Read (readMaybe)
+import System.Info (os)
+import System.Process (callCommand)
+import System.IO (hFlush, stdout)
+
+limparTela :: IO ()
+limparTela = callCommand $ if os == "mingw32" then "cls" else "clear"
 
 saldoAtual :: [Float] -> Float
 saldoAtual = sum
@@ -103,36 +110,77 @@ atualizarSaldo jogador resultado aposta =
 trim :: String -> String
 trim = funcao . funcao where funcao = reverse . dropWhile isSpace
 
-obterNome :: IO String
-obterNome = do
-  print "Digite seu nome:"
-  name <- getLine
-  if null (trim name) then do
-    print "Nome inválido! Tente novamente"
-    obterNome
-  else return name
+lerString :: String -> IO String
+lerString texto = do
+  putStr texto
+  hFlush stdout
+  input <- getLine
 
-criarJogador :: String -> Jogador
-criarJogador name = Jogador name [] []
+  if null (trim input) then do
+    putStrLn "Entrada invalida! Tente novamente"
+    lerString texto
+  else return input
+
+lerFloat :: String -> IO Float
+lerFloat texto = do
+  input <- lerString texto
+
+  case readMaybe input :: Maybe Float of
+    Just valor | valor > 0 -> return valor
+    _ -> do
+      putStrLn "Entrada inválida! Digite um número maior que 0"
+      lerFloat texto
+
+criarJogador :: String -> Float -> Jogador
+criarJogador name saldo = Jogador name [] [saldo]
     
+
+menu :: Jogador -> IO ()
+menu jogador = do
+  putStrLn "OPÇÕES"
+  putStrLn "[1] - Jogar"
+  putStrLn "[2] - Ver histórico"
+  putStrLn "[3] - Sair"
+  putStrLn ("Saldo atual: " ++ show (saldoAtual (historico jogador)))
+
+  op <- lerString "Opção: "
+
+  case op of
+    "1" -> do
+      putStrLn "Escolhido opção 1"
+      menu jogador
+    "2" -> do
+      putStrLn "Escolhido opção 2"
+      menu jogador
+    "3" -> do
+      putStrLn "Saindo..."
+      return ()
+    _ -> do
+      putStrLn "Opção inválida! Tente novamente"
+      menu jogador
+
+-- iniciarJogo :: 
+
 
 main :: IO ()
 main = do
+  limparTela
 
-  -- let name = obterNome
+  -- name <- lerString "Digite seu nome: "
   let name = "Cristina"
 
-  let player = criarJogador name
-  let dealer = criarJogador "dealer"
+  -- saldo <- lerFloat "Saldo inicial: "
+  let saldo = 100
+
+
+  let player = criarJogador name saldo
+  let dealer = criarJogador "dealer" 0
 
   print player
   print dealer
 
-  let new = addHistorico player 100
-  print new
+  menu player
 
-  let new2 = apostar new 200
-  print new2
 
 -- print teste
 -- let novoJogador = pegarCarta teste (Carta A Copas)
