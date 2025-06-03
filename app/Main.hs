@@ -3,6 +3,7 @@ module Main where
 import Carta
 import Jogador
 import System.Random (randomRIO)
+import Data.Char (isSpace)
 
 saldoAtual :: [Float] -> Float
 saldoAtual = sum
@@ -12,17 +13,17 @@ somarMao [Carta valor1 _, Carta valor2 _]
   | (valor1 == A && valorNumerico valor2 == 10) ||
     (valor2 == A && valorNumerico valor1 == 10) = 21
   | otherwise = valorNumerico valor1 + valorNumerico valor2
-somarMao mao = sum (map valorNumerico mao)
+somarMao cartas = sum (map valorNumerico cartas)
 
 data Resultado = VitoriaBlackjack | Vitoria | Empate | Derrota deriving (Eq)
 
 data Situacao = Blackjack | VinteUm | Estouro | Incompleto deriving (Eq)
 
 verificarSituacao :: Mao -> Situacao
-verificarSituacao mao =
-  let total = somarMao mao
+verificarSituacao cartas =
+  let total = somarMao cartas
    in if total > 21 then Estouro
-      else if total == 21 && length mao == 2 then Blackjack
+      else if total == 21 && length cartas == 2 then Blackjack
       else if total == 21 then VinteUm
       else Incompleto
 
@@ -87,8 +88,9 @@ addHistorico jogador valor = jogador {historico = historico jogador ++ [valor]}
 
 apostar :: Jogador -> Float -> Jogador
 apostar jogador valor 
-  | valor > 0 = addHistorico jogador -valor
+  | valor > 0 = addHistorico jogador (-valor)
   | valor < 0 = addHistorico jogador valor
+  | otherwise = jogador
 
 atualizarSaldo :: Jogador -> Resultado -> Float -> Jogador
 atualizarSaldo jogador resultado aposta =
@@ -98,26 +100,29 @@ atualizarSaldo jogador resultado aposta =
     Empate -> addHistorico jogador aposta
     Derrota -> addHistorico jogador 0
 
+trim :: String -> String
+trim = funcao . funcao where funcao = reverse . dropWhile isSpace
+
 obterNome :: IO String
 obterNome = do
   print "Digite seu nome:"
-  nome <- getLine
-  if null (trim nome) then do
+  name <- getLine
+  if null (trim name) then do
     print "Nome inválido! Tente novamente"
     obterNome
-  else return nome
+  else return name
 
 criarJogador :: String -> Jogador
-criarJogador nome = Jogador nome [] []
+criarJogador name = Jogador name [] []
     
 
 main :: IO ()
 main = do
 
-  -- let nome = obterNome
-  let nome = "Cristina"
+  -- let name = obterNome
+  let name = "Cristina"
 
-  let player = criarJogador nome
+  let player = criarJogador name
   let dealer = criarJogador "dealer"
 
   print player
@@ -125,6 +130,9 @@ main = do
 
   let new = addHistorico player 100
   print new
+
+  let new2 = apostar new 200
+  print new2
 
 -- print teste
 -- let novoJogador = pegarCarta teste (Carta A Copas)
