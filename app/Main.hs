@@ -8,6 +8,7 @@ import Text.Read (readMaybe)
 import System.Info (os)
 import System.Process (callCommand)
 import System.IO (hFlush, stdout)
+import Text.Printf (printf)
 
 limparTela :: IO ()
 limparTela = callCommand $ if os == "mingw32" then "cls" else "clear"
@@ -150,6 +151,7 @@ menu jogador = do
       putStrLn "Escolhido opção 1"
       menu jogador
     "2" -> do
+      exibirHistorico (historico jogador)
       putStrLn "Escolhido opção 2"
       menu jogador
     "3" -> do
@@ -158,6 +160,20 @@ menu jogador = do
     _ -> do
       putStrLn "Opção inválida! Tente novamente"
       menu jogador
+
+exibirGanhosPerdas :: [Float] -> Int -> IO ()
+exibirGanhosPerdas [] _ = return ()
+exibirGanhosPerdas (valor : tail) i = do
+  let prefixo = if even i then "Aposta" else "Resultado"
+      sufixo = if even i then " | " else "\n"
+  printf "%s: R$%.2f%s" prefixo valor sufixo
+
+exibirHistorico :: [Float] -> IO ()
+exibirHistorico [] = return ()
+exibirHistorico (head : tail) = do
+  printf "Saldo inicial: R$%.2f\n" head
+  exibirGanhosPerdas tail 0
+
 
 -- iniciarJogo :: 
 
