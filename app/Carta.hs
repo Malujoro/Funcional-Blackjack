@@ -79,9 +79,16 @@ instance Valoravel Carta where
     Q -> 10
     K -> 10
 
+temCarta10 :: Carta -> Bool
+temCarta10 (Carta v _) = valorNumerico v == 10
+
+existeA :: Mao -> Bool
+existeA [] = False
+existeA [Carta A _] = True
+existeA (_ : cauda) = existeA cauda
+
 somarMao :: Mao -> Int
-somarMao [Carta valor1 _, Carta valor2 _]
-  | (valor1 == A && valorNumerico valor2 == 10) ||
-    (valor2 == A && valorNumerico valor1 == 10) = 21
-  | otherwise = valorNumerico valor1 + valorNumerico valor2
-somarMao cartas = sum (map valorNumerico cartas)
+somarMao cartas
+  | length cartas == 2 && existeA cartas &&
+    (temCarta10 (head cartas) || temCarta10 (cartas !! 1)) = 21
+  | otherwise = sum (map valorNumerico cartas)
