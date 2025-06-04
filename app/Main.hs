@@ -14,6 +14,13 @@ import Text.Printf (printf)
 limparTela :: IO ()
 limparTela = callCommand $ if os == "mingw32" then "cls" else "clear"
 
+voltar :: IO ()
+voltar = do
+  putStr "\nPressione qualquer tecla para voltar\n"
+  hFlush stdout
+  getLine
+  return ()
+
 saldoInicial :: Float
 saldoInicial = 500
 
@@ -187,6 +194,8 @@ exibirHistorico (cabeca : cauda) = do
   exibirGanhosPerdas cauda 0
   printf "Saldo atual: R$%.2f\n" (saldoAtual (cabeca : cauda))
 
+  voltar
+
 exibirMaoFinal :: String -> Jogador -> IO ()
 exibirMaoFinal texto jogador = do
   putStrLn (texto ++ show (somarMao (mao jogador)))
@@ -217,6 +226,8 @@ iniciarJogo jogador = do
     Empate -> putStr "\nOcorreu um empate\n"
     Derrota -> putStr "\nQue pena, você perdeu! Tente recuperar na próxima\n"
 
+  voltar
+
   return (limparMao jogador)
 
 rodada :: Jogador -> Jogador -> Mao -> IO (Jogador, Jogador)
@@ -229,18 +240,16 @@ rodada jogador dealer baralho = do
 
   op <- lerString "Opção: "
 
-  putStrLn ""
-
   case op of
     "1" -> do
       (jogador, dealer, baralho) <- comprarParaTodos jogador dealer baralho 1
       rodada jogador dealer baralho
     "0" -> do
-      putStrLn "Parando de jogar..."
+      putStrLn "\nParando de jogar..."
       (dealer, baralho) <- jogadaDealer dealer baralho True
       return (jogador, dealer)
     _ -> do
-      putStrLn "Opção inválida! Tente novamente"
+      putStrLn "\nOpção inválida! Tente novamente"
       rodada jogador dealer baralho
 
 
@@ -256,6 +265,7 @@ menu jogador = do
   putStrLn "[2] - Ver histórico"
   putStrLn "[0] - Sair"
   printf "Saldo atual: R$%.2f\n" saldo
+  printf "Aposta máxima: R$%.2f\n" (apostaMaxima saldo)
 
   op <- lerString "Opção: "
 
