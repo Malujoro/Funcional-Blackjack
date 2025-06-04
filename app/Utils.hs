@@ -7,13 +7,12 @@ module Utils (
   lerFloat,
 ) where
 
-import Logo
 import Data.Char (isSpace)
+import Desenho
 import Text.Read (readMaybe)
 import System.Info (os)
 import System.Process (callCommand)
 import System.IO (hFlush, stdout)
-
 
 limparTela :: IO ()
 limparTela = callCommand $ if os == "mingw32" then "cls" else "clear"
@@ -28,7 +27,7 @@ voltar = do
 exibirTela :: IO ()
 exibirTela = do
   limparTela
-  desenho1
+  desenho
   logo
 
 trim :: String -> String

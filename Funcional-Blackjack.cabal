@@ -64,8 +64,8 @@ executable Funcional-Blackjack
     other-modules:
         Blackjack
         Carta
+        Desenho
         Jogador
-        Logo
         Utils
 
     -- LANGUAGE extensions used by modules in this package.

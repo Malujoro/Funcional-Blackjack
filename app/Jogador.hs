@@ -7,21 +7,24 @@ module Jogador (
   exibirHistorico,
   exibirMaoFinal,
   limparMao,
+  assinarContrato,
   pegarCarta,
 ) where
 
 import Carta
+import Desenho
 import Utils
 import Text.Printf (printf)
 
 data Jogador = Jogador
     { nome :: String,
       mao :: Mao,
-      historico :: [Float]
+      historico :: [Float],
+      contratado :: Bool
     } deriving Show
 
 criarJogador :: String -> Float -> Jogador
-criarJogador name saldo = Jogador name [] [saldo]
+criarJogador name saldo = Jogador name [] [saldo] False
 
 addHistorico :: Jogador -> Float -> Jogador
 addHistorico jogador valor = jogador {historico = historico jogador ++ [valor]}
@@ -58,6 +61,14 @@ exibirMaoFinal texto jogador = do
 
 limparMao :: Jogador -> Jogador
 limparMao jogador = jogador {mao = []}
+
+assinarContrato :: Jogador -> IO Jogador
+assinarContrato jogador 
+  | not (contratado jogador) && saldoAtual (historico jogador) == 0 = do
+    contrato
+    return jogador {contratado = True}
+  | otherwise = return jogador
+
 
 pegarCarta :: Jogador -> Carta -> Jogador
 pegarCarta jogador carta = jogador {mao = mao jogador ++ [carta]}
