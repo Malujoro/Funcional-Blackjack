@@ -5,8 +5,8 @@ import Jogador
 import Utils
 import Text.Printf (printf)
 
-menu :: Jogador -> Bool -> IO ()
-menu jogador zerado = do
+menu :: Jogador -> IO ()
+menu jogador = do
   exibirTela
 
   let saldo = saldoAtual (historico jogador)
@@ -27,28 +27,30 @@ menu jogador zerado = do
   case op of
     "1" -> do
       jogador2 <- iniciarJogo jogador
-      menu jogador2 zerado
+      menu jogador2
     "2" -> do
       exibirHistorico (historico jogador)
-      menu jogador zerado
+      menu jogador
     "0" -> do
       putStrLn "Saindo...\n"
       return ()
     _ -> do
       putStrLn "Opção inválida! Tente novamente"
-      menu jogador zerado
+      menu jogador
 
 
 
 main :: IO ()
 main = do
-  -- limparTela
+  limparTela
 
   name <- lerString "Digite seu nome: "
-
   saldo <- lerFloat "Saldo inicial: " saldoInicial
-  -- let saldo = saldoInicial
+
+  putStrLn ""
+  putStrLn "Aperte ENTER para iniciar o jogo de acordo com os termos"
+  getLine
 
   let player = criarJogador name saldo
 
-  menu player False
+  menu player

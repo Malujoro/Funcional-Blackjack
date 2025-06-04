@@ -28,7 +28,7 @@ apostaMaxima :: Float -> Float
 apostaMaxima 0 = saldoInicial
 apostaMaxima saldo
   | saldo == 0 = saldoInicial
-  | saldo < 0 = arredondar2 (saldo  * (-1))
+  | saldo < 0 = max 500 (arredondar2 (saldo / 2  * (-1)))
   | saldo > 0 = saldo
 
 verificarSituacao :: Mao -> Situacao
