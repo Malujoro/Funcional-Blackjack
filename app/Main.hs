@@ -2,6 +2,7 @@ module Main where
 
 import Carta
 import Jogador
+import Logo
 import System.Random (randomRIO)
 import Data.Char (isSpace)
 import Text.Read (readMaybe)
@@ -13,6 +14,18 @@ import Text.Printf (printf)
 limparTela :: IO ()
 limparTela = callCommand $ if os == "mingw32" then "cls" else "clear"
 
+saldoInicial :: Float
+saldoInicial = 500
+
+limiteNegativo :: Float
+limiteNegativo = -100
+
+apostaMaxima :: Float -> Float
+apostaMaxima 0 = saldoInicial
+apostaMaxima saldo
+  | saldo == 0 = saldoInicial
+  | saldo < 0 = (saldo / 2) * (-1)
+  | saldo > 0 = saldo
 
 saldoAtual :: [Float] -> Float
 saldoAtual = sum
@@ -144,15 +157,15 @@ lerString texto = do
     lerString texto
   else return input
 
-lerFloat :: String -> IO Float
-lerFloat texto = do
+lerFloat :: String -> Float -> IO Float
+lerFloat texto maximo = do
   input <- lerString texto
 
   case readMaybe input :: Maybe Float of
-    Just valor | valor > 0 -> return valor
+    Just valor | valor > 0 && valor <= maximo -> return valor
     _ -> do
-      putStrLn "\nEntrada inválida! Digite um número maior que 0\n"
-      lerFloat texto
+      putStrLn ("\nEntrada invalida! Digite um número maior que 0 e menor ou igual a " ++ show maximo ++ "\n")
+      lerFloat texto maximo
 
 criarJogador :: String -> Float -> Jogador
 criarJogador name saldo = Jogador name [] [saldo]
@@ -172,12 +185,17 @@ exibirHistorico [] = return ()
 exibirHistorico (cabeca : cauda) = do
   printf "Saldo inicial: R$%.2f\n" cabeca
   exibirGanhosPerdas cauda 0
-  putStrLn ""
+  printf "Saldo atual: R$%.2f\n" (saldoAtual (cabeca : cauda))
 
+exibirMaoFinal :: String -> Jogador -> IO ()
+exibirMaoFinal texto jogador = do
+  putStrLn (texto ++ show (somarMao (mao jogador)))
+  putStrLn (showMao (mao jogador))
 
 iniciarJogo :: Jogador -> IO Jogador
 iniciarJogo jogador = do
-  valorApostado <- lerFloat "Valor apostado: "
+  let saldo = saldoAtual (historico jogador)
+  valorApostado <- lerFloat "Valor apostado: " (apostaMaxima saldo)
   jogador <- apostar jogador valorApostado 
 
   let dealer = criarJogador "dealer" 0
@@ -190,14 +208,14 @@ iniciarJogo jogador = do
 
   jogador <- atualizarSaldo jogador resultado valorApostado
 
+  exibirMaoFinal "\nSua mão deu " jogador
+  exibirMaoFinal "\nA mão do dealer deu " dealer
+
   case resultado of
     VitoriaBlackjack -> putStr "\nParabéns, você ganhou com um BLACKJACK\n"
     Vitoria -> putStr "\nParabéns, você ganhou\n"
     Empate -> putStr "\nOcorreu um empate\n"
     Derrota -> putStr "\nQue pena, você perdeu! Tente recuperar na próxima\n"
-
-  print jogador
-  print dealer
 
   return (limparMao jogador)
 
@@ -206,7 +224,7 @@ rodada jogador dealer baralho = do
   putStrLn "\nOPÇÕES"
   putStrLn "[1] - Comprar"
   putStrLn "[0] - Parar"
-  putStrLn ("Mão atual: " ++ show (mao jogador))
+  putStrLn ("Mão atual: " ++ showMao (mao jogador))
   putStrLn ("Soma: " ++ show (somarMao (mao jogador)))
 
   op <- lerString "Opção: "
@@ -218,21 +236,26 @@ rodada jogador dealer baralho = do
       (jogador, dealer, baralho) <- comprarParaTodos jogador dealer baralho 1
       rodada jogador dealer baralho
     "0" -> do
-      putStrLn "Parando de jogar...\n"
+      putStrLn "Parando de jogar..."
       (dealer, baralho) <- jogadaDealer dealer baralho True
       return (jogador, dealer)
     _ -> do
-      putStrLn "Opção inválida! Tente novamente\n"
+      putStrLn "Opção inválida! Tente novamente"
       rodada jogador dealer baralho
 
 
 menu :: Jogador -> IO ()
 menu jogador = do
+  let saldo = saldoAtual (historico jogador)
+
+  desenho1
+  logo
+
   putStrLn "\nOPÇÕES"
   putStrLn "[1] - Jogar"
   putStrLn "[2] - Ver histórico"
   putStrLn "[0] - Sair"
-  putStrLn ("Saldo atual: " ++ show (saldoAtual (historico jogador)))
+  printf "Saldo atual: R$%.2f\n" saldo
 
   op <- lerString "Opção: "
 
@@ -258,23 +281,11 @@ main :: IO ()
 main = do
   -- limparTela
 
-  -- name <- lerString "Digite seu nome: "
-  let name = "Cristina"
+  name <- lerString "Digite seu nome: "
 
-  -- saldo <- lerFloat "Saldo inicial: "
-  let saldo = 100
-
+  saldo <- lerFloat "Saldo inicial: " saldoInicial
+  -- let saldo = saldoInicial
 
   let player = criarJogador name saldo
-  print player
 
   menu player
-
-
--- print teste
--- let novoJogador = pegarCarta teste (Carta A Copas)
--- print novoJogador
--- let estourou = verificarEstouro novoJogador
--- putStrLn $ if estourou
---     then "O jogador estourou!"
---     else "o jogador fez o L 🤣🤣🤣"

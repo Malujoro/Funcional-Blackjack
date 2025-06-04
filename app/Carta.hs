@@ -6,6 +6,7 @@ module Carta
     Valoravel (..),
     todosValores,
     todosNaipes,
+    showMao,
   )
 where
 
@@ -47,6 +48,11 @@ instance Show Valor where
 instance Show Carta where
   show (Carta valor naipe) = "[" ++ show valor ++ " de " ++ show naipe ++ "]"
 
+showMao :: Mao -> String
+showMao [item] = show item
+showMao (cabeca : cauda) = do
+  show cabeca ++ ", " ++ showMao cauda
+
 class Valoravel a where
   valorNumerico :: a -> Int
 
@@ -62,7 +68,7 @@ instance Valoravel Valor where
 
 instance Valoravel Carta where
   valorNumerico (Carta valor _) = case valor of
-    A -> 11
+    A -> 1
     Dois -> 2
     Tres -> 3
     Quatro -> 4
