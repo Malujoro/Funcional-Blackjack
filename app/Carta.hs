@@ -1,14 +1,11 @@
-module Carta
-  ( Naipe (..),
-    Valor (..),
-    Carta (..),
-    Mao,
-    Valoravel (..),
-    todosValores,
-    todosNaipes,
-    showMao,
-  )
-where
+module Carta (
+  Carta (..),
+  Mao,
+  todosNaipes,
+  todosValores,
+  showMao,
+  somarMao,
+) where
 
 data Naipe = Copas | Espadas | Ouros | Paus
 
@@ -81,3 +78,10 @@ instance Valoravel Carta where
     J -> 10
     Q -> 10
     K -> 10
+
+somarMao :: Mao -> Int
+somarMao [Carta valor1 _, Carta valor2 _]
+  | (valor1 == A && valorNumerico valor2 == 10) ||
+    (valor2 == A && valorNumerico valor1 == 10) = 21
+  | otherwise = valorNumerico valor1 + valorNumerico valor2
+somarMao cartas = sum (map valorNumerico cartas)

@@ -1,9 +1,7 @@
-module Logo
-    (
-        logo,
-        desenho1,
-    )
-where
+module Logo (
+    logo,
+    desenho1,
+) where
 
 desenho1 :: IO ()
 desenho1 = putStrLn "\
