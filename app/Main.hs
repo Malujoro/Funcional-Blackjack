@@ -21,17 +21,26 @@ voltar = do
   getLine
   return ()
 
+exibirTela :: IO ()
+exibirTela = do
+  limparTela
+  desenho1
+  logo
+
 saldoInicial :: Float
 saldoInicial = 500
 
 limiteNegativo :: Float
 limiteNegativo = -100
 
+arredondar2 :: Float -> Float
+arredondar2 x = fromIntegral (round (x * 100)) / 100
+
 apostaMaxima :: Float -> Float
 apostaMaxima 0 = saldoInicial
 apostaMaxima saldo
   | saldo == 0 = saldoInicial
-  | saldo < 0 = (saldo / 2) * (-1)
+  | saldo < 0 = arredondar2 (saldo  * (-1))
   | saldo > 0 = saldo
 
 saldoAtual :: [Float] -> Float
@@ -169,7 +178,7 @@ lerFloat texto maximo = do
   input <- lerString texto
 
   case readMaybe input :: Maybe Float of
-    Just valor | valor > 0 && valor <= maximo -> return valor
+    Just valor | valor > 0 && valor <= maximo -> return (arredondar2 valor)
     _ -> do
       putStrLn ("\nEntrada invalida! Digite um número maior que 0 e menor ou igual a " ++ show maximo ++ "\n")
       lerFloat texto maximo
@@ -232,6 +241,8 @@ iniciarJogo jogador = do
 
 rodada :: Jogador -> Jogador -> Mao -> IO (Jogador, Jogador)
 rodada jogador dealer baralho = do
+  exibirTela
+
   putStrLn "\nOPÇÕES"
   putStrLn "[1] - Comprar"
   putStrLn "[0] - Parar"
@@ -255,11 +266,10 @@ rodada jogador dealer baralho = do
 
 menu :: Jogador -> IO ()
 menu jogador = do
+  exibirTela
+
   let saldo = saldoAtual (historico jogador)
-
-  desenho1
-  logo
-
+  
   putStrLn "\nOPÇÕES"
   putStrLn "[1] - Jogar"
   putStrLn "[2] - Ver histórico"
@@ -289,7 +299,7 @@ menu jogador = do
 
 main :: IO ()
 main = do
-  -- limparTela
+  limparTela
 
   name <- lerString "Digite seu nome: "
 
