@@ -9,13 +9,19 @@ import Jogador
 import Utils
 import System.Random (randomRIO)
 
+-- Tipo algébrico que representa os possíveis estados do jogo
 data Resultado = VitoriaBlackjack | Vitoria | Empate | Derrota deriving (Eq)
 
+-- Tipo algébrico que representa as possíveis situações de um jogador
 data Situacao = Blackjack | VinteUm | Estouro | Incompleto deriving (Eq)
 
+-- Função para definir o valor máximo para o saldo inicial
 saldoInicial :: Float
 saldoInicial = 500
 
+-- Função para atualizar o histórico do jogador dependendo do resultado do seu jogo
+-- Recebe o jogador, o resultado, o valor da aposta
+-- Retorna o jogador atualizado
 atualizarSaldo :: Jogador -> Resultado -> Float -> IO Jogador
 atualizarSaldo jogador resultado aposta =
   case resultado of
@@ -24,13 +30,19 @@ atualizarSaldo jogador resultado aposta =
     Empate -> return (addHistorico jogador aposta)
     Derrota -> return (addHistorico jogador 0)
 
+-- Função para definir o valor máximo de aposta permitido
+-- Recebe o saldo do jogador
+-- Retorna o valor máximo permitido
 apostaMaxima :: Float -> Float
 apostaMaxima 0 = saldoInicial
 apostaMaxima saldo
   | saldo == 0 = saldoInicial
-  | saldo < 0 = max 500 (arredondar2 (saldo / 2  * (-1)))
+  | saldo < 0 = max saldoInicial (arredondar2 (saldo / 2  * (-1)))
   | saldo > 0 = saldo
 
+-- Função para verificar a situação de uma mão
+-- Recebe a mão
+-- Retorna a situação
 verificarSituacao :: Mao -> Situacao
 verificarSituacao cartas =
   let total = somarMao cartas
@@ -39,6 +51,9 @@ verificarSituacao cartas =
       else if total == 21 then VinteUm
       else Incompleto
 
+-- Função para verificar o resultado de uma partida (com mãos incompletas)
+-- Recebe a mão do jogador e a mão do dealer
+-- Retorna o resultado
 verificarVitoria :: Mao -> Mao -> Resultado
 verificarVitoria jogadorMao dealerMao =
   let totalJogador = somarMao jogadorMao
@@ -47,7 +62,9 @@ verificarVitoria jogadorMao dealerMao =
       else if totalJogador == totalDealer then Empate
       else Derrota
 
-
+-- Função para verificar o resultado de uma partida
+-- Recebe o jogador e o dealer
+-- Retorna o resultado
 verificarResultado :: Jogador -> Jogador -> Resultado
 verificarResultado jogador dealer =
   let situacaoJogador = verificarSituacao (mao jogador)
@@ -59,9 +76,14 @@ verificarResultado jogador dealer =
       -- else if situacaoJogador == VinteUm || situacaoDealer == Estouro then 
       else Vitoria
 
+-- Função para criar um baralho com listas compreensivas
+-- Retorna o baralho criado
 criarBaralho :: Mao
 criarBaralho = [Carta valor naipe | valor <- todosValores, naipe <- todosNaipes]
 
+-- Função para comprar uma carta do baralho
+-- Recebe o baralho
+-- Retorna uma tupla com a carta retirada e o baralho atualizado
 comprarCarta :: Mao -> IO (Carta, Mao)
 comprarCarta baralho = do
   let len = length baralho
@@ -73,13 +95,18 @@ comprarCarta baralho = do
           novoBaralho = take randomNu baralho ++ drop (randomNu + 1) baralho
       return (carta, novoBaralho)
 
+-- Função para o jogador comprar uma carta
+-- Recebe o jogador e o baralho
+-- Retorna o jogador e o baralho atualizados
 comprarCartaParaJogador :: Jogador -> Mao -> IO (Jogador, Mao)
 comprarCartaParaJogador jogador baralho = do
   (carta, novoBaralho) <- comprarCarta baralho
   let novoJogador = pegarCarta jogador carta
   return (novoJogador, novoBaralho)
 
-
+-- Função para executar as ações do dealer (comprar seguindo as regras ou passar a vez)
+-- Recebe o dealer, o baralho e um booleano (indica se o dealer deve comprar até atingir suas regras)
+-- Retorna o dealer e o baralho atualizados
 jogadaDealer :: Jogador -> Mao -> Bool -> IO (Jogador, Mao)
 jogadaDealer dealer baralho finalizar
   | somarMao (mao dealer) >= 17 = return (dealer, baralho)
@@ -88,7 +115,9 @@ jogadaDealer dealer baralho finalizar
     if finalizar then jogadaDealer novoDealer novoBaralho finalizar
     else return (novoDealer, novoBaralho)
 
-
+-- Função para fazer todos os jogadores comprarem uma quantia de cartas
+-- Recebe o jogador, o dealer, o baralho e a quantidade e cartas
+-- Retorna o jogador, o dealer e o baralho atualizados
 comprarParaTodos :: Jogador -> Jogador -> Mao -> Int -> IO (Jogador, Jogador, Mao)
 comprarParaTodos jogador dealer baralho quant 
   | quant > 0 = do
@@ -97,6 +126,9 @@ comprarParaTodos jogador dealer baralho quant
     comprarParaTodos jogador dealer baralho (quant-1)
   | otherwise = return (jogador, dealer, baralho)
 
+-- Função para iniciar o jogo
+-- Recebe o jogador
+-- Retorna o jogador com mão limpa e histórico atualizado
 iniciarJogo :: Jogador -> IO Jogador
 iniciarJogo jogador = do
   let saldo = saldoAtual (historico jogador)
@@ -126,6 +158,9 @@ iniciarJogo jogador = do
 
   return (limparMao jogador)
 
+-- Função para executar a lógica da rodada
+-- Recebe o jogador, o dealer e o baralho
+-- Retorna o jogador e o dealer atualizados
 rodada :: Jogador -> Jogador -> Mao -> IO (Jogador, Jogador)
 rodada jogador dealer baralho = do
   exibirTela

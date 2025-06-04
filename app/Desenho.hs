@@ -7,9 +7,11 @@ module Desenho (
 import System.Info (os)
 import System.Process (callCommand)
 
+-- Função para limpar a tela dependendo do sistema operacional
 limparTela :: IO ()
 limparTela = callCommand $ if os == "mingw32" then "cls" else "clear"
 
+-- Função para exibir um desenho ASCII
 desenho :: IO ()
 desenho = putStrLn "\
 \           /\\,%,_                              \n\
@@ -30,6 +32,7 @@ desenho = putStrLn "\
 \      \\___,'                       \\.-\"`/     \n\
 \                                    `--'      "
 
+-- Função para exibir o nome BLACKJACK em ASCII
 logo :: IO ()
 logo = putStrLn "\
 \######   ####       ##       ####   ###  ##     ####    ##       ####   ###  ##  \n\
@@ -40,7 +43,7 @@ logo = putStrLn "\
 \ ##  ##   ##  ##  ##  ##    ##  ##   ##  ##  ##  ##   ##  ##    ##  ##   ##  ##  \n\
 \######   #######  ##  ##     ####   ###  ##   ####    ##  ##     ####   ###  ##  \n"
 
-
+-- Função para fazer a assinatura do contrato
 contrato :: IO ()
 contrato = do
     limparTela
@@ -52,6 +55,7 @@ contrato = do
     desenhoSelo
     return ()
 
+-- Função para exibir o contrato
 desenhoContrato :: IO ()
 desenhoContrato = putStrLn "\
 \      ╔══════════════════════════════════════════════╗\n\
@@ -77,6 +81,7 @@ desenhoContrato = putStrLn "\
 \\n\
 \   Pressione ENTER para selar este contrato..."
 
+-- Função para exibir o selo de contrato assinado
 desenhoSelo :: IO ()
 desenhoSelo = putStrLn "\
 \       ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░\n\

@@ -5,6 +5,8 @@ import Jogador
 import Utils
 import Text.Printf (printf)
 
+-- Função para exibir o menu, obter uma opção como entrada do usuário e agir conforme ela
+-- Recebe o jogador
 menu :: Jogador -> IO ()
 menu jogador = do
   exibirTela
@@ -39,7 +41,7 @@ menu jogador = do
       menu jogador
 
 
-
+-- Função responsável por obter os dados iniciais do jogador e começar o jogo
 main :: IO ()
 main = do
   limparTela
